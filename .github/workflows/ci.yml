@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check bot
+
+      - name: Smoke test (import + DB init)
+        env:
+          BOT_TOKEN: "123456:dummy"
+        run: |
+          python -c "
+          import asyncio
+          from bot.db import init_db
+          from bot.handlers import build_router
+          asyncio.run(init_db())
+          r = build_router()
+          assert r.sub_routers, 'no routers registered'
+          print('routers:', [s.name for s in r.sub_routers])
+          "
