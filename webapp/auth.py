@@ -1,5 +1,7 @@
 import datetime
-from hashlib import sha256
+import hashlib
+import hmac
+import os
 
 import jwt
 
@@ -7,11 +9,16 @@ from webapp.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 
 
 def hash_password(password: str) -> str:
-    return sha256(password.encode()).hexdigest()
+    salt = os.urandom(16)
+    dk = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1)
+    return salt.hex() + ":" + dk.hex()
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return hash_password(password) == hashed
+    salt_hex, dk_hex = hashed.split(":")
+    salt = bytes.fromhex(salt_hex)
+    dk = hashlib.scrypt(password.encode(), salt=salt, n=16384, r=8, p=1)
+    return hmac.compare_digest(dk, bytes.fromhex(dk_hex))
 
 
 def create_access_token(user_id: int, username: str) -> str:

@@ -1,7 +1,7 @@
 import random
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from webapp.database import get_session
@@ -76,11 +76,15 @@ async def open_case(
     if not case:
         raise HTTPException(404, "Кейс не найден")
 
-    if user.balance < case.price:
+    result_upd = await session.execute(
+        update(User)
+        .where(User.id == user.id, User.balance >= case.price)
+        .values(balance=User.balance - case.price)
+    )
+    if result_upd.rowcount == 0:
         raise HTTPException(400, "Недостаточно средств на балансе")
 
-    user.balance -= case.price
-    user.balance = round(user.balance, 2)
+    await session.refresh(user)
 
     skins_result = await session.execute(
         select(Skin, CaseSkin.drop_weight)

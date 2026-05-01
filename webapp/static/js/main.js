@@ -47,8 +47,9 @@ const RARITY_NAMES = {
 async function api(path, options = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    const url = new URL(path, window.location.origin);
     try {
-        const resp = await fetch(path, { ...options, headers });
+        const resp = await fetch(url.href, { ...options, headers });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.detail || 'Ошибка сервера');
         return data;
@@ -378,11 +379,19 @@ async function loadInventory() {
                 <div class="skin-name">${escapeHtml(item.skin.name)}</div>
                 <div class="skin-price">${item.skin.price.toFixed(2)} ₽</div>
                 <div class="skin-from">Из: ${escapeHtml(item.obtained_from)}</div>
-                <button class="btn btn-accent btn-sm" onclick="sellSkin(${item.inventory_id}, '${escapeHtml(item.skin.name)}', ${item.skin.price})">
+                <button class="btn btn-accent btn-sm sell-btn"
+                    data-id="${item.inventory_id}"
+                    data-name="${escapeAttr(item.skin.name)}"
+                    data-price="${item.skin.price}">
                     Продать за ${item.skin.price.toFixed(2)} ₽
                 </button>
             </div>
         `).join('');
+        grid.querySelectorAll('.sell-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                sellSkin(Number(btn.dataset.id), btn.dataset.name, Number(btn.dataset.price));
+            });
+        });
     } catch (e) {
         notify('Ошибка загрузки инвентаря', 'error');
     }
@@ -644,6 +653,10 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function escapeAttr(text) {
+    return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /* ========== INIT ========== */
