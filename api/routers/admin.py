@@ -272,9 +272,13 @@ async def approve_payment(
     elif payment.kind == PaymentKind.ORDER_GROUP:
         rows = await session.execute(select(Order).where(Order.payment_id == payment.id))
         orders = list(rows.scalars().all())
+        activated = 0
         for o in orders:
+            if o.status != OrderStatus.AWAITING_PAYMENT:
+                continue
             o.status = OrderStatus.PAID
             o.paid_at = datetime.now(UTC)
+            activated += 1
             res = await session.execute(
                 select(User).where(User.courier_city_id == o.city_id).limit(1)
             )
@@ -293,7 +297,7 @@ async def approve_payment(
                 )
         await send_message(
             user.id,
-            f"✅ Платёж #{payment.id} подтверждён. Создано заказов: <b>{len(orders)}</b>.",
+            f"✅ Платёж #{payment.id} подтверждён. Создано заказов: <b>{activated}</b>.",
         )
     await session.flush()
     return PaymentOut.model_validate(payment)
@@ -314,10 +318,11 @@ async def reject_payment(
     if payment.kind == PaymentKind.ORDER_GROUP:
         rows = await session.execute(select(Order).where(Order.payment_id == payment.id))
         for o in rows.scalars().all():
-            o.status = OrderStatus.CANCELED
-            product = await session.get(Product, o.product_id)
-            if product is not None and product.stock >= 0:
-                product.stock += 1
+            if o.status == OrderStatus.AWAITING_PAYMENT:
+                o.status = OrderStatus.CANCELED
+                product = await session.get(Product, o.product_id)
+                if product is not None and product.stock >= 0:
+                    product.stock += 1
     await send_message(
         payment.user_id,
         f"❌ Платёж #{payment.id} отклонён. {body.note}".strip(),
