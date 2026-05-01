@@ -153,6 +153,7 @@ async def _create_orders(
     free: bool = False,
 ) -> list[Order]:
     orders: list[Order] = []
+    delivery_assigned: set[int] = set()
     for it in items:
         p = it.product
         for _ in range(it.quantity):
@@ -176,7 +177,7 @@ async def _create_orders(
                 p.stock -= 1
             session.add(order)
             orders.append(order)
-        if not free:
+        if not free and p.city_id not in delivery_assigned:
             city = cities.get(p.city_id)
             if city is not None:
                 delivery_amount = Decimal(str(city.delivery_price_usdt or 0))
@@ -188,6 +189,7 @@ async def _create_orders(
                     if first is not None:
                         first.delivery_price_usdt = delivery_amount
                         first.total_usdt = Decimal(str(first.product_price_usdt)) + delivery_amount
+                        delivery_assigned.add(p.city_id)
     await session.flush()
     return orders
 

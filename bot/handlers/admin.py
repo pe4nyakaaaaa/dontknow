@@ -680,6 +680,9 @@ async def admin_payment_no(call: CallbackQuery, session: AsyncSession, bot: Bot)
         for o in res.scalars().all():
             if o.status == OrderStatus.AWAITING_PAYMENT:
                 o.status = OrderStatus.CANCELED
+                product = await session.get(Product, o.product_id)
+                if product is not None and product.stock >= 0:
+                    product.stock += 1
         await session.flush()
 
     try:

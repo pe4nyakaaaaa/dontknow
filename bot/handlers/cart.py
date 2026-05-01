@@ -362,6 +362,7 @@ async def _create_orders_from_cart(
     free: bool = False,
 ) -> list[Order]:
     orders: list[Order] = []
+    delivery_assigned: set[int] = set()
     for it in items:
         product = it.product
         city = cities.get(product.city_id)
@@ -388,8 +389,8 @@ async def _create_orders_from_cart(
             session.add(order)
             orders.append(order)
 
-        # доставка — первому заказу города
-        if not free and city is not None:
+        # доставка — первому заказу города (один раз на город)
+        if not free and city is not None and city.id not in delivery_assigned:
             delivery_amount = Decimal(str(city.delivery_price_usdt))
             if delivery_amount > 0:
                 first_for_city = next(
@@ -401,6 +402,7 @@ async def _create_orders_from_cart(
                     first_for_city.total_usdt = (
                         Decimal(str(first_for_city.product_price_usdt)) + delivery_amount
                     )
+                    delivery_assigned.add(city.id)
     await session.flush()
     return orders
 
@@ -469,11 +471,14 @@ async def cancel_checkout(
         await call.answer("Нельзя отменить", show_alert=True)
         return
     payment.status = PaymentStatus.REJECTED
-    # отменяем привязанные заказы
+    # отменяем привязанные заказы и возвращаем сток
     res = await session.execute(select(Order).where(Order.payment_id == payment.id))
     for o in res.scalars().all():
         if o.status == OrderStatus.AWAITING_PAYMENT:
             o.status = OrderStatus.CANCELED
+            product = await session.get(Product, o.product_id)
+            if product is not None and product.stock >= 0:
+                product.stock += 1
     await session.flush()
     await state.clear()
     await call.message.edit_text("❌ Оформление отменено.", reply_markup=kb.back_to_main_kb())

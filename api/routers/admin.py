@@ -315,6 +315,9 @@ async def reject_payment(
         rows = await session.execute(select(Order).where(Order.payment_id == payment.id))
         for o in rows.scalars().all():
             o.status = OrderStatus.CANCELED
+            product = await session.get(Product, o.product_id)
+            if product is not None and product.stock >= 0:
+                product.stock += 1
     await send_message(
         payment.user_id,
         f"❌ Платёж #{payment.id} отклонён. {body.note}".strip(),
