@@ -20,9 +20,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
+          pip install -r webapp/requirements.txt
 
       - name: Ruff
-        run: ruff check bot
+        run: |
+          ruff check bot
+          ruff check webapp
 
       - name: Smoke test (import + DB init)
         env:

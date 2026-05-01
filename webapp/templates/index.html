@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOWDROP — Case Battle CS2</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo" onclick="navigateTo('home')">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">SHADOW<span class="logo-accent">DROP</span></span>
+            </div>
+            <nav class="nav">
+                <a class="nav-link active" data-page="home" onclick="navigateTo('home')">🎰 Кейсы</a>
+                <a class="nav-link" data-page="battles" onclick="navigateTo('battles')">⚔️ Батлы</a>
+                <a class="nav-link" data-page="support" onclick="navigateTo('support')">💬 Поддержка</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div id="auth-section" class="auth-section">
+                <button class="btn btn-accent" onclick="showModal('login')">Войти</button>
+                <button class="btn btn-primary" onclick="showModal('register')">Регистрация</button>
+            </div>
+            <div id="user-section" class="user-section hidden">
+                <div class="balance-box" onclick="navigateTo('deposit')">
+                    <span class="balance-icon">💰</span>
+                    <span id="user-balance">0.00</span> ₽
+                    <span class="balance-plus">+</span>
+                </div>
+                <div class="user-avatar" onclick="navigateTo('profile')">
+                    <span id="user-avatar-letter">U</span>
+                </div>
+                <span class="username-display" id="username-display" onclick="navigateTo('profile')"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- HOME PAGE -->
+        <section id="page-home" class="page active">
+            <div class="hero">
+                <div class="hero-particles"></div>
+                <h1 class="hero-title">SHADOW<span class="text-accent">DROP</span></h1>
+                <p class="hero-subtitle">Открывай кейсы CS2 • Выигрывай редкие скины • Участвуй в батлах</p>
+                <div class="hero-stats">
+                    <div class="stat-item"><span class="stat-value" id="stat-cases">16</span><span class="stat-label">Кейсов</span></div>
+                    <div class="stat-item"><span class="stat-value" id="stat-skins">200+</span><span class="stat-label">Скинов</span></div>
+                    <div class="stat-item"><span class="stat-value" id="stat-users">0</span><span class="stat-label">Игроков</span></div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <h2>🔥 Популярные кейсы</h2>
+                <div class="case-filters">
+                    <button class="filter-btn active" data-filter="all" onclick="filterCases('all')">Все</button>
+                    <button class="filter-btn" data-filter="budget" onclick="filterCases('budget')">Бюджетные</button>
+                    <button class="filter-btn" data-filter="standard" onclick="filterCases('standard')">Стандартные</button>
+                    <button class="filter-btn" data-filter="premium" onclick="filterCases('premium')">Премиум</button>
+                    <button class="filter-btn" data-filter="exclusive" onclick="filterCases('exclusive')">Эксклюзив</button>
+                    <button class="filter-btn" data-filter="themed" onclick="filterCases('themed')">Тематические</button>
+                </div>
+            </div>
+            <div class="cases-grid" id="cases-grid"></div>
+        </section>
+
+        <!-- CASE OPEN PAGE -->
+        <section id="page-case" class="page">
+            <div class="case-open-container">
+                <button class="back-btn" onclick="navigateTo('home')">← Назад к кейсам</button>
+                <div class="case-header-info">
+                    <h2 id="case-name"></h2>
+                    <p id="case-description" class="case-desc"></p>
+                    <div class="case-price-tag">Цена: <span id="case-price-display"></span> ₽</div>
+                </div>
+
+                <div class="roulette-wrapper">
+                    <div class="roulette-arrow"></div>
+                    <div class="roulette-container" id="roulette-container">
+                        <div class="roulette-strip" id="roulette-strip"></div>
+                    </div>
+                    <div class="roulette-arrow bottom"></div>
+                </div>
+
+                <button class="btn btn-open" id="btn-open-case" onclick="openCase()">
+                    🎰 Открыть кейс
+                </button>
+
+                <div class="won-skin-display hidden" id="won-skin-display">
+                    <h3>🎉 Поздравляем!</h3>
+                    <div class="won-skin-card" id="won-skin-card"></div>
+                    <div class="won-actions">
+                        <button class="btn btn-primary" onclick="openCase()">Открыть ещё</button>
+                        <button class="btn btn-accent" onclick="navigateTo('profile')">В инвентарь</button>
+                    </div>
+                </div>
+
+                <div class="case-contents">
+                    <h3>📦 Содержимое кейса</h3>
+                    <div class="case-skins-grid" id="case-skins-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BATTLES PAGE -->
+        <section id="page-battles" class="page">
+            <div class="battles-container">
+                <h2>⚔️ Case Battle</h2>
+                <p class="page-desc">Сражайтесь с другими игроками! Кто выбьет более дорогой скин — забирает всё.</p>
+                <div class="battles-grid">
+                    <div class="battle-card">
+                        <div class="battle-header">
+                            <span class="battle-mode">1 vs 1</span>
+                            <span class="battle-price">от 1.99 ₽</span>
+                        </div>
+                        <div class="battle-info">
+                            <h3>Классический батл</h3>
+                            <p>Два игрока, один кейс. Победитель получает оба скина!</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="createBattle('1v1')">Создать батл</button>
+                    </div>
+                    <div class="battle-card">
+                        <div class="battle-header">
+                            <span class="battle-mode">2 vs 2</span>
+                            <span class="battle-price">от 3.99 ₽</span>
+                        </div>
+                        <div class="battle-info">
+                            <h3>Командный батл</h3>
+                            <p>Команда из 2 игроков против другой команды!</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="createBattle('2v2')">Создать батл</button>
+                    </div>
+                    <div class="battle-card">
+                        <div class="battle-header">
+                            <span class="battle-mode">1 vs 1 vs 1 vs 1</span>
+                            <span class="battle-price">от 2.99 ₽</span>
+                        </div>
+                        <div class="battle-info">
+                            <h3>Королевская битва</h3>
+                            <p>4 игрока, один победитель забирает всё!</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="createBattle('ffa')">Создать батл</button>
+                    </div>
+                </div>
+                <div class="active-battles">
+                    <h3>🔴 Активные батлы</h3>
+                    <div class="active-battles-list" id="active-battles-list">
+                        <div class="no-battles">Пока нет активных батлов. Создайте первый!</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROFILE PAGE -->
+        <section id="page-profile" class="page">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar"><span id="profile-avatar-letter">U</span></div>
+                    <div class="profile-info">
+                        <h2 id="profile-username">Пользователь</h2>
+                        <p id="profile-email">email@example.com</p>
+                        <p class="profile-joined">Дата регистрации: <span id="profile-joined"></span></p>
+                    </div>
+                    <div class="profile-balance">
+                        <span class="balance-label">Баланс</span>
+                        <span class="balance-amount" id="profile-balance">0.00 ₽</span>
+                        <button class="btn btn-accent btn-sm" onclick="navigateTo('deposit')">Пополнить</button>
+                    </div>
+                </div>
+                <div class="profile-tabs">
+                    <button class="tab-btn active" onclick="switchProfileTab('inventory')">🎒 Инвентарь</button>
+                    <button class="tab-btn" onclick="switchProfileTab('history')">📜 История</button>
+                    <button class="tab-btn" onclick="switchProfileTab('settings')">⚙️ Настройки</button>
+                </div>
+                <div class="profile-tab-content" id="profile-tab-content">
+                    <div class="inventory-grid" id="inventory-grid">
+                        <div class="empty-state">Инвентарь пуст. Откройте кейс, чтобы получить скины!</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEPOSIT PAGE -->
+        <section id="page-deposit" class="page">
+            <div class="deposit-container">
+                <button class="back-btn" onclick="navigateTo('profile')">← Назад</button>
+                <h2>💳 Пополнение баланса</h2>
+                <div class="deposit-methods" id="deposit-methods"></div>
+                <div class="deposit-form hidden" id="deposit-form">
+                    <h3 id="deposit-method-name">Пополнение</h3>
+                    <div class="form-group">
+                        <label>Сумма (₽)</label>
+                        <input type="number" id="deposit-amount" min="100" max="100000" placeholder="Введите сумму" class="input">
+                    </div>
+                    <div class="deposit-info" id="deposit-info"></div>
+                    <button class="btn btn-primary" onclick="submitDeposit()">Пополнить</button>
+                    <button class="btn btn-secondary" onclick="cancelDeposit()">Отмена</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUPPORT PAGE -->
+        <section id="page-support" class="page">
+            <div class="support-container">
+                <h2>💬 Техническая поддержка</h2>
+
+                <div class="faq-section">
+                    <h3>❓ Часто задаваемые вопросы</h3>
+                    <div class="faq-list" id="faq-list"></div>
+                </div>
+
+                <div class="support-tickets">
+                    <h3>📋 Мои обращения</h3>
+                    <button class="btn btn-primary" onclick="showNewTicketForm()" id="btn-new-ticket">+ Новое обращение</button>
+                    <div class="new-ticket-form hidden" id="new-ticket-form">
+                        <div class="form-group">
+                            <label>Тема</label>
+                            <input type="text" id="ticket-subject" placeholder="Опишите проблему кратко" class="input" maxlength="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Сообщение</label>
+                            <textarea id="ticket-message" placeholder="Подробно опишите вашу проблему..." class="input textarea" maxlength="2000"></textarea>
+                        </div>
+                        <button class="btn btn-accent" onclick="submitTicket()">Отправить</button>
+                        <button class="btn btn-secondary" onclick="hideNewTicketForm()">Отмена</button>
+                    </div>
+                    <div class="tickets-list" id="tickets-list"></div>
+                </div>
+
+                <div class="ticket-chat hidden" id="ticket-chat">
+                    <button class="back-btn" onclick="closeTicketChat()">← К обращениям</button>
+                    <h3 id="ticket-chat-subject"></h3>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Введите сообщение..." class="input" maxlength="2000" onkeydown="if(event.key==='Enter')sendTicketMessage()">
+                        <button class="btn btn-primary" onclick="sendTicketMessage()">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODALS -->
+    <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()"></div>
+
+    <div class="modal hidden" id="modal-login">
+        <div class="modal-header">
+            <h3>Вход в аккаунт</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input type="text" id="login-username" placeholder="username" class="input" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="login-password" placeholder="••••••" class="input" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginUser()">
+            </div>
+            <div class="form-error hidden" id="login-error"></div>
+            <button class="btn btn-primary btn-full" onclick="loginUser()">Войти</button>
+            <p class="modal-switch">Нет аккаунта? <a onclick="showModal('register')">Зарегистрироваться</a></p>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="modal-register">
+        <div class="modal-header">
+            <h3>Регистрация</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input type="text" id="reg-username" placeholder="username" class="input" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" placeholder="email@example.com" class="input" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="reg-password" placeholder="Минимум 6 символов" class="input" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>Подтверждение пароля</label>
+                <input type="password" id="reg-password2" placeholder="Повторите пароль" class="input" autocomplete="new-password" onkeydown="if(event.key==='Enter')registerUser()">
+            </div>
+            <div class="form-error hidden" id="reg-error"></div>
+            <button class="btn btn-primary btn-full" onclick="registerUser()">Зарегистрироваться</button>
+            <p class="modal-switch">Уже есть аккаунт? <a onclick="showModal('login')">Войти</a></p>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification hidden" id="notification">
+        <span id="notification-text"></span>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo-text">SHADOW<span class="logo-accent">DROP</span></span>
+                <p>Лучшая платформа для открытия кейсов CS2</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Навигация</h4>
+                    <a onclick="navigateTo('home')">Кейсы</a>
+                    <a onclick="navigateTo('battles')">Батлы</a>
+                    <a onclick="navigateTo('support')">Поддержка</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Правовое</h4>
+                    <a href="#">Пользовательское соглашение</a>
+                    <a href="#">Политика конфиденциальности</a>
+                    <a href="#">Provably Fair</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Контакты</h4>
+                    <a href="#">Telegram</a>
+                    <a href="#">Discord</a>
+                    <a href="#">support@shadowdrop.gg</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024-2025 SHADOWDROP. Все права защищены. 18+</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
