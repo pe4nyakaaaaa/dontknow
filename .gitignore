@@ -14,3 +14,8 @@ venv/
 .pytest_cache/
 dist/
 build/
+node_modules/
+.env.local-backup
+webapp/dist/
+webapp/node_modules/
+

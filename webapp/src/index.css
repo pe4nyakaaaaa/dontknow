@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 14px;
+    --background: 256 35% 6%;
+    --foreground: 260 25% 96%;
+    --card: 258 36% 9%;
+    --card-foreground: 260 20% 95%;
+    --muted: 256 18% 18%;
+    --muted-foreground: 250 10% 65%;
+    --border: 256 25% 18%;
+    --input: 256 25% 14%;
+    --primary: 270 92% 65%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 285 95% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 270 92% 65%;
+  }
+
+  html, body, #root {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    background: hsl(var(--background));
+    @apply bg-page-grad;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.35); border-radius: 6px; }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(160deg, rgba(168,85,247,0.10) 0%, rgba(20,16,33,0.85) 100%);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(168,85,247,0.18);
+  }
+  .neon-text {
+    background: linear-gradient(90deg, #d8b4fe 0%, #f0abfc 50%, #d8b4fe 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 24px rgba(168,85,247,0.45);
+  }
+  .neon-border {
+    box-shadow: inset 0 0 0 1px rgba(168,85,247,0.45);
+  }
+}
