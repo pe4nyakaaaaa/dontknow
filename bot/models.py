@@ -71,6 +71,23 @@ class MessageKind(StrEnum):
     PHOTO = "PHOTO"
 
 
+class ProductFulfillment(StrEnum):
+    """Способ выполнения заказа.
+
+    PICKUP — самовывоз: после оплаты покупатель получает выданный из stash
+    фото+текст и забирает товар сам в выбранном районе.
+    COURIER — курьер привозит на адрес, покупатель платит за доставку.
+    """
+
+    PICKUP = "PICKUP"
+    COURIER = "COURIER"
+
+
+class StashStatus(StrEnum):
+    FREE = "FREE"
+    USED = "USED"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -160,6 +177,10 @@ class Order(Base):
     total_usdt: Mapped[float] = mapped_column(Numeric(12, 2))
 
     is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+    # True iff product.stock was actually decremented at order creation
+    # (i.e. product had finite, positive stock). Used by cancel/reject paths
+    # to restore stock only when it was consumed.
+    stock_consumed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     paid_at: Mapped[datetime | None] = mapped_column(DateTime)

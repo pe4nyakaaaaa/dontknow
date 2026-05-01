@@ -2,15 +2,26 @@
 
 from __future__ import annotations
 
-from aiogram.types import InlineKeyboardMarkup
+import os
+
+from aiogram.types import InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.models import CartItem, City, Order, Product
+
+
+def webapp_url() -> str | None:
+    raw = os.getenv("WEBAPP_URL", "").strip()
+    return raw or None
+
 
 # ----- основное меню -----
 
 def main_menu(*, is_admin: bool, is_courier: bool, is_moderator: bool) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
+    url = webapp_url()
+    if url:
+        kb.button(text="🚀 Открыть приложение", web_app=WebAppInfo(url=url))
     kb.button(text="🛒 Каталог", callback_data="catalog:cities")
     kb.button(text="🧺 Корзина", callback_data="cart:show")
     kb.button(text="💼 Кошелёк", callback_data="wallet:show")
@@ -23,7 +34,11 @@ def main_menu(*, is_admin: bool, is_courier: bool, is_moderator: bool) -> Inline
         kb.button(text="🛡 Кабинет модератора", callback_data="mod:home")
     if is_admin:
         kb.button(text="🛠 Админ-панель", callback_data="admin:home")
-    kb.adjust(2, 2, 2, 1, 1, 1)
+    layout = []
+    if url:
+        layout.append(1)
+    layout.extend([2, 2, 2, 1, 1, 1])
+    kb.adjust(*layout)
     return kb.as_markup()
 
 

@@ -20,6 +20,17 @@ from bot.middlewares import DbSessionMiddleware, UserUpsertMiddleware
 async def _on_startup(bot: Bot) -> None:
     me = await bot.get_me()
     logging.info("Bot started: @%s (id=%s)", me.username, me.id)
+    from bot.keyboards import webapp_url
+    url = webapp_url()
+    if url:
+        try:
+            from aiogram.types import MenuButtonWebApp, WebAppInfo
+            await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(text="🚀 Открыть", web_app=WebAppInfo(url=url))
+            )
+            logging.info("Menu button set to WebApp: %s", url)
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("Could not set chat menu button: %s", exc)
 
 
 async def main() -> None:
