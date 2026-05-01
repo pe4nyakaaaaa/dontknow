@@ -175,6 +175,7 @@ async def _create_orders(
                 order.paid_at = datetime.now(UTC)
             if p.stock > 0:
                 p.stock -= 1
+                order.stock_consumed = True
             session.add(order)
             orders.append(order)
         if not free and p.city_id not in delivery_assigned:
@@ -228,7 +229,18 @@ async def get_order(
     o = await session.get(Order, order_id)
     if not o:
         raise HTTPException(404, "Order not found")
-    if o.user_id != user.id and o.courier_id != user.id and not settings.is_moderator(user.id):
+    is_city_courier = (
+        user.courier_city_id is not None
+        and user.courier_city_id == o.city_id
+        and o.status in {OrderStatus.PAID, OrderStatus.IN_DELIVERY}
+    )
+    if (
+        o.user_id != user.id
+        and o.courier_id != user.id
+        and not is_city_courier
+        and not settings.is_moderator(user.id)
+        and not settings.is_admin(user.id)
+    ):
         raise HTTPException(403, "Forbidden")
     product = await session.get(Product, o.product_id)
     city = await session.get(City, o.city_id)
@@ -238,6 +250,7 @@ async def get_order(
         status=o.status.value,
         product_id=o.product_id,
         product_name=product.name if product else "",
+        city_id=o.city_id,
         city_name=city.name if city else "",
         delivery_address=o.delivery_address,
         payment_method=o.payment_method.value if o.payment_method else None,

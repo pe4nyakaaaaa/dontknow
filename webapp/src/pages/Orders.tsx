@@ -107,10 +107,25 @@ export function OrderDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const takeMut = useMutation({
+    mutationFn: () => api.courierTake(oid),
+    onSuccess: () => {
+      toast.success("Заказ взят");
+      qc.invalidateQueries({ queryKey: ["order", oid] });
+      qc.invalidateQueries({ queryKey: ["courier-orders"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (orderQ.isLoading) return <Loading />;
   if (orderQ.error || !orderQ.data) return <ErrorBox error={orderQ.error} />;
   const o = orderQ.data;
   const showChat = o.courier_id != null;
+  const canTake =
+    o.status === "PAID"
+    && o.courier_id == null
+    && meQ.data?.courier_city_id != null
+    && meQ.data.courier_city_id === o.city_id;
 
   return (
     <div className="space-y-4">
@@ -147,6 +162,17 @@ export function OrderDetail() {
             Я оплатил — отправить на проверку
           </Button>
         </Card>
+      )}
+
+      {canTake && (
+        <Button
+          variant="success"
+          className="w-full"
+          disabled={takeMut.isPending}
+          onClick={() => takeMut.mutate()}
+        >
+          {takeMut.isPending ? "Беру…" : "✅ Принять заказ"}
+        </Button>
       )}
 
       {showChat && o.status !== "AWAITING_PAYMENT" && (

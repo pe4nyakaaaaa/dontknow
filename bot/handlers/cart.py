@@ -386,6 +386,7 @@ async def _create_orders_from_cart(
                 order.paid_at = datetime.now(UTC)
             if product.stock > 0:
                 product.stock -= 1
+                order.stock_consumed = True
             session.add(order)
             orders.append(order)
 
@@ -476,9 +477,11 @@ async def cancel_checkout(
     for o in res.scalars().all():
         if o.status == OrderStatus.AWAITING_PAYMENT:
             o.status = OrderStatus.CANCELED
-            product = await session.get(Product, o.product_id)
-            if product is not None and product.stock >= 0:
-                product.stock += 1
+            if o.stock_consumed:
+                product = await session.get(Product, o.product_id)
+                if product is not None and product.stock >= 0:
+                    product.stock += 1
+                o.stock_consumed = False
     await session.flush()
     await state.clear()
     await call.message.edit_text("❌ Оформление отменено.", reply_markup=kb.back_to_main_kb())

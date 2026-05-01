@@ -72,6 +72,8 @@ export const api = {
     request<ChatMessageOut>(`/orders/${orderId}/chat`, { method: "POST", body: JSON.stringify({ text, photo_data_url }) }),
 
   courierOrders: () => request<CourierOrder[]>(`/courier/orders`),
+  courierTake: (id: number) =>
+    request<{ ok: boolean }>(`/courier/orders/${id}/take`, { method: "POST" }),
   courierDeliver: (id: number) =>
     request<{ ok: boolean }>(`/courier/orders/${id}/deliver`, { method: "POST" }),
 
@@ -202,6 +204,7 @@ export type OrderDetailOut = {
   status: string;
   product_id: number;
   product_name: string;
+  city_id: number;
   city_name: string;
   delivery_address: string | null;
   payment_method: string | null;
@@ -253,6 +256,7 @@ export type CourierOrder = {
   delivery_address: string;
   total_usdt: number;
   created_at: string;
+  is_mine: boolean;
 };
 
 export type AdminCity = {

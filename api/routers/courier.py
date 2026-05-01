@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import get_current_user, get_session, require_courier
@@ -27,11 +27,24 @@ async def courier_orders(
     session: AsyncSession = Depends(get_session),
     user: User = Depends(require_courier),
 ):
+    """Возвращает заказы, относящиеся к курьеру:
+
+    1. Все заказы, которые курьер уже взял (`courier_id == user.id`).
+    2. Свободные оплаченные заказы (`status == PAID`, `courier_id IS NULL`)
+       в городе, к которому курьер привязан — их можно «Принять».
+    """
     rows = await session.execute(
         select(Order, Product.name, City.name)
         .join(Product, Product.id == Order.product_id)
         .join(City, City.id == Order.city_id)
-        .where(Order.courier_id == user.id)
+        .where(
+            or_(
+                Order.courier_id == user.id,
+                (Order.status == OrderStatus.PAID)
+                & (Order.courier_id.is_(None))
+                & (Order.city_id == user.courier_city_id),
+            )
+        )
         .order_by(Order.id.desc())
     )
     return [
@@ -43,9 +56,31 @@ async def courier_orders(
             "delivery_address": o.delivery_address,
             "total_usdt": float(o.total_usdt or 0),
             "created_at": o.created_at,
+            "is_mine": o.courier_id == user.id,
         }
         for o, pn, cn in rows.all()
     ]
+
+
+@router.post("/courier/orders/{order_id}/take")
+async def take_order(
+    order_id: int,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(require_courier),
+):
+    order = await session.get(Order, order_id)
+    if order is None or order.city_id != user.courier_city_id:
+        raise HTTPException(404, "Order not found")
+    if order.status != OrderStatus.PAID or order.courier_id is not None:
+        raise HTTPException(400, "Order is not available")
+    order.courier_id = user.id
+    order.status = OrderStatus.IN_DELIVERY
+    await session.flush()
+    await send_message(
+        order.user_id,
+        f"🚴 Курьер взял заказ #{order.id} в работу. Откройте чат, чтобы согласовать доставку.",
+    )
+    return {"ok": True}
 
 
 @router.post("/courier/orders/{order_id}/deliver")

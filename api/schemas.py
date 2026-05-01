@@ -117,6 +117,7 @@ class OrderDetailOut(_CamelModel):
     status: str
     product_id: int
     product_name: str
+    city_id: int
     city_name: str
     delivery_address: str | None
     payment_method: str | None
